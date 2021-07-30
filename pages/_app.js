@@ -1,6 +1,7 @@
 import FirebaseContext from '../context/firebase';
 import { firebase, storage, FieldValue } from '../lib/firebase';
 
+import './global.css';
 import 'tailwindcss/tailwind.css';
 
 function MyApp({ Component, pageProps }) {
