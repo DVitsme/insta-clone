@@ -4,6 +4,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 
 import FirebaseContext from '../context/firebase';
+import { doesUsernameExist } from '../lib/auth';
 
 const SignUp = () => {
   const router = useRouter();
@@ -19,14 +20,32 @@ const SignUp = () => {
 
   const handleSignUp = async (e) => {
     e.preventDefault();
-
-    try {
-      await firebase.auth().createUserWithEmailAndPassword(email, password);
-      router.push('/dashboard');
-    } catch (err) {
-      setEmail('');
-      setPassword('');
-      setError(err.message);
+    const usernameExist = await doesUsernameExist(username);
+    if (usernameExist) {
+      setError('Sorry Username is already taken');
+    } else {
+      try {
+        const createdUser = await firebase
+          .auth()
+          .createUserWithEmailAndPassword(email, password);
+        await createdUser.user.updateProfile({
+          displayName: username
+        });
+        await firebase.firestore().collection('users').add({
+          userId: createdUser.user.uid,
+          username: username.toLowerCase(),
+          fullName,
+          emailAddress: email.toLowerCase(),
+          following: [],
+          dateCreated: Date.now()
+        });
+        router.push('/dashboard');
+      } catch (err) {
+        setFullName('');
+        setEmail('');
+        setPassword('');
+        setError(err.message);
+      }
     }
   };
   return (
